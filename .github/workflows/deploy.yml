@@ -37,3 +37,5 @@ jobs:
           region: ${{ secrets.GCP_REGION }}
           image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
           allow-unauthenticated: true
+          flags: --port=8080
+          env_vars: PORT=8080
