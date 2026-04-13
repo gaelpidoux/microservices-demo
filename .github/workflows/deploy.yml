@@ -33,12 +33,10 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: frontend
-          region: ${{ secrets.GCP_REGION }}
-          image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
-          allow-unauthenticated: true
-          flags: --allow-unauthenticated --port=8080
-          env_vars: |
-          PORT=8080
-          DISABLE_TRACING=true
-          PRODUCT_CATALOG_SERVICE_ADDR=localhost:3550
+        service: frontend
+        region: ${{ secrets.GCP_REGION }}
+        image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
+        flags: --allow-unauthenticated --port=8080
+        env_vars: |
+        DISABLE_TRACING=true
+        PRODUCT_CATALOG_SERVICE_ADDR=localhost:3550
