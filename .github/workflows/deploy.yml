@@ -1,0 +1,40 @@
+name: Deploy to Cloud Run
+
+on:
+push:
+branches:
+- main
+
+jobs:
+deploy:
+runs-on: ubuntu-latest
+
+
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v3
+
+  - name: Auth to GCP
+    uses: google-github-actions/auth@v2
+    with:
+      credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+  - name: Set up gcloud
+    uses: google-github-actions/setup-gcloud@v2
+
+  - name: Configure Docker
+    run: gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+  - name: Build Docker image
+    run: docker build -t europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }} ./src/frontend
+
+  - name: Push Docker image
+    run: docker push europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
+
+  - name: Deploy to Cloud Run
+    uses: google-github-actions/deploy-cloudrun@v2
+    with:
+      service: frontend
+      region: ${{ secrets.GCP_REGION }}
+      image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
+      allow-unauthenticated: true
