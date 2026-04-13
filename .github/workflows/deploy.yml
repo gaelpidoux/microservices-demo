@@ -1,42 +1,49 @@
-name: Deploy to Cloud Run
+name: Deploy Frontend to Cloud Run
 
 on:
-push:
-branches:
-- main
+  push:
+    branches:
+      - main  
+
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v3
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-  - name: Auth to GCP
-    uses: google-github-actions/auth@v2
-    with:
-      credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Configure Docker
+        run: gcloud auth configure-docker europe-west1-docker.pkg.dev
 
-  - name: Set up gcloud
-    uses: google-github-actions/setup-gcloud@v2
+      - name: Build and Push Container
+        run: |
+          PROJECT_ID=$(echo "${{ secrets.GCP_PROJECT_ID }}" | tr -d '\n')
+          IMAGE_NAME="europe-west1-docker.pkg.dev/${PROJECT_ID}/online-boutique/frontend:${{ github.sha }}"
+          docker build -t "$IMAGE_NAME" ./src/frontend
+          docker push "$IMAGE_NAME"
 
-  - name: Configure Docker
-    run: gcloud auth configure-docker europe-west1-docker.pkg.dev
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: frontend
+          region: ${{ secrets.GCP_REGION }}
+          image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
 
-  - name: Build Docker image
-    run: docker build -t europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }} ./src/frontend
-
-  - name: Push Docker image
-    run: docker push europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
-
-  - name: Deploy to Cloud Run
-    uses: google-github-actions/deploy-cloudrun@v2
-    with:
-      service: frontend
-      region: ${{ secrets.GCP_REGION }}
-      image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
-      flags: --allow-unauthenticated --port=8080
-      env_vars: |
-        DISABLE_TRACING=true
-        PRODUCT_CATALOG_SERVICE_ADDR=localhost:3550
+          env_vars: |
+            PRODUCT_CATALOG_SERVICE_ADDR=localhost:8080
+            CURRENCY_SERVICE_ADDR=localhost:8080
+            CART_SERVICE_ADDR=localhost:8080
+            RECOMMENDATION_SERVICE_ADDR=localhost:8080
+            SHIPPING_SERVICE_ADDR=localhost:8080
+            CHECKOUT_SERVICE_ADDR=localhost:8080
+            AD_SERVICE_ADDR=localhost:8080
+            PAYMENT_SERVICE_ADDR=localhost:8080
+            EMAIL_SERVICE_ADDR=localhost:8080
+            SHOPPING_ASSISTANT_SERVICE_ADDR=localhost:8080
+          flags: "--allow-unauthenticated --port=8080"
