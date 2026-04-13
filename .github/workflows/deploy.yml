@@ -9,7 +9,7 @@ jobs:
 deploy:
 runs-on: ubuntu-latest
 
-
+```
 steps:
   - name: Checkout code
     uses: actions/checkout@v3
@@ -38,3 +38,4 @@ steps:
       region: ${{ secrets.GCP_REGION }}
       image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
       allow-unauthenticated: true
+```
