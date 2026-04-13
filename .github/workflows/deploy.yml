@@ -38,3 +38,7 @@ jobs:
           image: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/online-boutique/frontend:${{ github.sha }}
           allow-unauthenticated: true
           flags: --allow-unauthenticated --port=8080
+          env_vars: |
+          PORT=8080
+          DISABLE_TRACING=true
+          PRODUCT_CATALOG_SERVICE_ADDR=localhost:3550
